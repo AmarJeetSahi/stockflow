@@ -17,11 +17,12 @@ import org.springframework.web.server.ResponseStatusException;
 @Service
 @RequiredArgsConstructor
 @Builder
-public class UserService {
+public class UserAuthService {
 
     private final UserRepository userRepository;
     private final ModelMapper modelMapper;
     private final PasswordEncoder passwordEncoder;
+    private final JwtService jwtService;
 
     public UserDto registerUser(UserDto inputUser) {
 
@@ -46,15 +47,30 @@ public class UserService {
 
     }
 
-    public LoginResponseDto login(LoginRequestDto inputUser) {
-        User  fetchedUser = (User) userRepository.
-                findByEmail(inputUser.getEmail())
-                .orElseThrow(() ->new ResourceNotFoundException("Invalid Email or Password"));
-        if(!passwordEncoder.matches(
+    public String login(LoginRequestDto inputUser) {
+
+
+        User fetchedUser = (User) userRepository
+                .findByEmail(inputUser.getEmail())
+                .orElseThrow(() ->
+                        new ResourceNotFoundException("Invalid Email or Password"));
+
+
+        if (!passwordEncoder.matches(
                 inputUser.getPassword(),
                 fetchedUser.getPassword())) {
-            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid Password");
+
+
+            throw new ResponseStatusException(
+                    HttpStatus.UNAUTHORIZED,
+                    "Invalid Password");
         }
-        return modelMapper.map(fetchedUser, LoginResponseDto.class);
+
+
+        LoginRequestDto loginRequestDto = modelMapper.map(fetchedUser, LoginRequestDto.class);
+        String token = jwtService.generateToken(loginRequestDto);
+
+
+        return token;
     }
 }
