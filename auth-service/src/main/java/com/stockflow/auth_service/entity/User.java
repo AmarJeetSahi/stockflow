@@ -12,6 +12,8 @@ import lombok.*;
 @Builder
 public class User {
 
+    //db entity class
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
